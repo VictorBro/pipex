@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/05 02:10:57 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 02:11:01 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/11 19:44:14 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,8 +76,8 @@ void	ft_first_cmd(t_pipex *pa)
 	pa->out_fd = -1;
 	if (dup2(pa->in_fd, STDIN_FILENO) < 0)
 	{
-		ft_fprintf(STDERR_FILENO, "dup2(%d, %d): %s\n",
-			pa->in_fd, STDIN_FILENO, strerror(errno));
+		// ft_fprintf(STDERR_FILENO, "dup2(%d, %d): %s\n",
+		// 	pa->in_fd, STDIN_FILENO, strerror(errno));
 		ft_clean_pipex(pa);
 		exit(EXIT_FAILURE);
 	}

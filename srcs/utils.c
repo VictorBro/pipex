@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/05 02:11:29 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 02:11:32 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/11 19:30:44 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "pipex.h"
-/**
- * Frees the memory allocated for an array of strings.
- * in a case of error while doing ft_split, split is 
- * using calloc so it will free all 
- * the substrings until he encounters a NULL pointer.
- */
+
 void	ft_free_strs(char **strs)
 {
 	int	i;
@@ -65,7 +60,7 @@ int	ft_open_files(t_pipex *pa)
 {
 	if (!pa->here_doc)
 	{
-		pa->in_fd = open(pa->argv[1], O_RDONLY, 0644);
+		pa->in_fd = open(pa->argv[1], O_RDONLY);
 		if (pa->in_fd < 0)
 			perror(pa->argv[1]);
 		pa->out_fd = open(pa->argv[pa->argc - 1],

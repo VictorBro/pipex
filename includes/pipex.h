@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/05 02:07:05 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 02:07:07 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/11 18:05:43 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 # define FALSE		0
 # define TRUE		1
 # define PIPE_OUT	0
-# define PIPE_IN		1
+# define PIPE_IN	1
 
 enum {
 	OK,
