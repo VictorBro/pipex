@@ -65,8 +65,8 @@ int	ft_init_pipex(t_pipex *pa, int argc, char *argv[], char *envp[])
  * Executes the child process for pipex.
  * @param pa The pipex structure containing necessary information.
  * @param i The index of the current command in the command list.
- * in a case of cmd_argv[0] == NULL,
- * (the command passed is empty "") line 90 will be executed.
+ * in a case of cmd_argv[0] == NULL (the command passed is empty "")
+ * execve("", (char *const []){"", NULL}, pa->envp) will be executed.
  */
 void	ft_child(t_pipex *pa, int i)
 {

@@ -103,25 +103,59 @@ char	*ft_form_path(char *path, char *cmd)
 	free(tmp);
 	return (ret);
 }
+
+// Function to split a command string into arguments, handling quotes
+// < in.txt cat | grep -o -E 'is | the' >
+// ./pipex in.txt "cat" "grep -o -E 'is | the'" out.txt
+char **split_command(const char *cmd) {
+    char **argv = NULL;
+    int argc = 0;
+    int in_quotes = 0;
+    const char *start = cmd;
+    const char *p = cmd;
+
+    while (*p) {
+        if (*p == '\"') {
+            in_quotes = !in_quotes;
+        } else if (*p == ' ' && !in_quotes) {
+            if (p > start) {
+                argv = realloc(argv, sizeof(char *) * (argc + 2));
+                argv[argc] = strndup(start, p - start);
+                argv[argc + 1] = NULL;
+                argc++;
+            }
+            start = p + 1;
+        }
+        p++;
+    }
+
+    if (p > start) {
+        argv = realloc(argv, sizeof(char *) * (argc + 2));
+        argv[argc] = strndup(start, p - start);
+        argv[argc + 1] = NULL;
+    }
+
+    return argv;
+}
+
 /**
  * Parses the command and returns an array of arguments.
  * checking that the env is splitted without errors, 
  * than verifying if command is an absolute path or starts with "./" or "../",
  * returns the original command arguments.
  * Otherwise, searches for the command in the environment paths and returns the updated command arguments.
- *if access returns 0, the command is valid, so return the updated command arguments.
+ * if access returns 0, the command is valid, so return the updated command arguments.
  * @param pa The pipex structure containing environment paths.
  * @param cmd The command to be parsed.
  * @return The parsed command arguments.
  */
-
 char	**ft_parse_cmd(t_pipex *pa, char *cmd)
 {
 	int		i;
 	char	*path;
 	char	**cmd_argv;
 
-	cmd_argv = ft_split(cmd, ' ');
+	cmd_argv = split_command(cmd);
 	if (!cmd_argv || !cmd_argv[0] || cmd_argv[0][0] == '/' ||
 			!ft_strncmp(cmd_argv[0], "./", 2) ||
 			!ft_strncmp(cmd_argv[0], "../", 3) ||
