@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/05 02:11:29 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/11 19:30:44 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/21 09:08:37 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,38 +104,130 @@ char	*ft_form_path(char *path, char *cmd)
 	return (ret);
 }
 
+int	is_space(char c)
+{
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\v'
+		|| c == '\f' || c == '\r');
+}
+
+static int count_args(const char *cmd)
+{
+	int		count;
+	int		in_quotes;
+	char	quote_char;
+
+	count = 0;
+	in_quotes = 0;
+	quote_char = '\0';
+	while (*cmd)
+	{
+		while (is_space(*cmd))
+			cmd++;
+		if (*cmd)
+		{
+			count++;
+			while (*cmd && (in_quotes || !is_space(*cmd)))
+			{
+				if ((*cmd == '\'' || *cmd == '"')
+					&& (in_quotes == 0 || *cmd == quote_char))
+				{
+					in_quotes = !in_quotes;
+					if (in_quotes)
+						quote_char = *cmd;
+				}
+				cmd++;
+			}
+		}
+	}
+	return (count);
+}
+
+static char *extract_arg(const char **cmd_ptr)
+{
+	const char *cmd = *cmd_ptr;
+	char quote_char = '\0';
+	int in_quotes = 0;
+	size_t len = 0;
+
+	while (is_space(*cmd))
+		cmd++;
+
+	const char *start = cmd;
+
+	while (*cmd && (in_quotes || !is_space(*cmd)))
+	{
+		if ((*cmd == '\'' || *cmd == '"') && (in_quotes == 0 || *cmd == quote_char))
+		{
+			if (in_quotes)
+				in_quotes = 0;
+			else
+			{
+				in_quotes = 1;
+				quote_char = *cmd;
+			}
+		}
+		else
+			len++;
+		cmd++;
+	}
+
+	char *arg = malloc(len + 1);
+	if (!arg)
+		return NULL;
+
+	len = 0;
+	while (start < cmd)
+	{
+		if (*start == '\'' || *start == '"')
+		{
+			if (in_quotes && *start == quote_char)
+				in_quotes = 0;
+			else if (!in_quotes)
+			{
+				in_quotes = 1;
+				quote_char = *start;
+			}
+		}
+		else
+			arg[len++] = *start;
+		start++;
+	}
+
+	arg[len] = '\0';
+	*cmd_ptr = cmd;
+	return arg;
+}
+
 // Function to split a command string into arguments, handling quotes
-// < in.txt cat | grep -o -E 'is | the' >
+// < in.txt cat | grep -o -E 'is | the' > out.txt
 // ./pipex in.txt "cat" "grep -o -E 'is | the'" out.txt
-char **split_command(const char *cmd) {
-    char **argv = NULL;
-    int argc = 0;
-    int in_quotes = 0;
-    const char *start = cmd;
-    const char *p = cmd;
+char **split_command(const char *cmd)
+{
+	int		arg_count;
+	char	**args;
+	int		i;
 
-    while (*p) {
-        if (*p == '\"') {
-            in_quotes = !in_quotes;
-        } else if (*p == ' ' && !in_quotes) {
-            if (p > start) {
-                argv = realloc(argv, sizeof(char *) * (argc + 2));
-                argv[argc] = strndup(start, p - start);
-                argv[argc + 1] = NULL;
-                argc++;
-            }
-            start = p + 1;
-        }
-        p++;
-    }
-
-    if (p > start) {
-        argv = realloc(argv, sizeof(char *) * (argc + 2));
-        argv[argc] = strndup(start, p - start);
-        argv[argc + 1] = NULL;
-    }
-
-    return argv;
+	if (!cmd)
+		return NULL;
+	arg_count = count_args(cmd);
+	args = (char**)malloc((arg_count + 1) * sizeof(char *));
+	if (!args)
+		return NULL;
+	i = 0;
+	while (i < arg_count)
+	{
+		args[i] = extract_arg(&cmd);
+		if (!args[i])
+		{
+			while (i-- > 0)
+				free(args[i]);
+			free(args);
+			return NULL;
+		}
+		i++;
+	}
+	args[arg_count] = NULL;
+	return (args);
 }
 
 /**
