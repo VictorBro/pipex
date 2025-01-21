@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 22:03:37 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 02:05:10 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/21 21:47:47 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ int	ft_printf(const char *str, ...)
 	va_start(params, str);
 	while (str[cur])
 	{
-		init_opt(&opt);
+		init_opt(&opt, STDOUT_FILENO);
 		if (str[cur] == '%')
 			total += process(str, &params, &cur, &opt);
 		else
@@ -120,8 +120,7 @@ int	ft_fprintf(int fd, const char *str, ...)
 	va_start(params, str);
 	while (str[cur])
 	{
-		init_opt(&opt);
-		opt.fd = fd;
+		init_opt(&opt, fd);
 		if (str[cur] == '%')
 			total += process(str, &params, &cur, &opt);
 		else

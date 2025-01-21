@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/05 02:07:05 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/11 18:05:43 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/21 21:08:12 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,5 +54,6 @@ int		ft_init_pipex(t_pipex *pa, int argc, char *argv[], char *envp[]);
 void	pipex(t_pipex *pa);
 void	process_fd_and_pipes(t_pipex *pa);
 void	ft_heredoc_child(t_pipex *pa);
+int		is_space(char c);
 
 #endif

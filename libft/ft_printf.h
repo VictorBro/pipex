@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/13 19:14:46 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 00:51:15 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/21 21:30:05 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ int		ft_printhex(unsigned int n, t_opt *opt, int isupper);
 int		print_str(char *str, t_opt *opt);
 int		print_char(char c, t_opt *opt);
 int		ft_max(int a, int b);
-void	init_opt(t_opt *opt);
+void	init_opt(t_opt *opt, int fd);
 int		count_digits(unsigned int n, int base);
 int		print_padding(int count, char pad_char, t_opt *opt);
 int		print_digits(unsigned int n, char *base, unsigned int base_len,

@@ -6,13 +6,13 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 17:59:11 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 00:51:59 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/21 21:29:41 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../ft_printf.h"
 
-void	init_opt(t_opt *opt)
+void	init_opt(t_opt *opt, int fd)
 {
 	opt->sharp = 0;
 	opt->space = 0;
@@ -25,7 +25,7 @@ void	init_opt(t_opt *opt)
 	opt->zero_width = 0;
 	opt->padding = 0;
 	opt->error = 0;
-	opt->fd = 1;
+	opt->fd = fd;
 }
 
 int	count_digits(unsigned int n, int base)

@@ -5,7 +5,7 @@ LIBFT_DIR := libft
 INCLUDE_DIR := includes
 SRC_DIR := srcs
 BONUS_DIR := bonus
-FILES := main.c pipex.c pipe.c utils.c
+FILES := main.c pipex.c pipe.c utils.c args_parser.c
 SRCS := $(addprefix $(SRC_DIR)/, $(FILES))
 BONUS_FILES := main_bonus.c \
 			bonus_utils.c
