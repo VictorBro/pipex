@@ -6,130 +6,106 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/21 21:05:35 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/21 22:23:03 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/25 15:18:04 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 #include "pipex.h"
 
-static int	count_args(const char *cmd)
+static char	*parse_one_token(const char *s, int *i)
 {
-	int		count;
-	char	quote;
+	t_builder	b;
+	char		c;
+	int			res;
 
-	count = 0;
-	quote = '\0';
-	while (*cmd)
+	b.str = NULL;
+	b.len = 0;
+	b.cap = 0;
+	while (s[*i])
 	{
-		while (is_space(*cmd))
-			cmd++;
-		if (*cmd == '\0')
+		res = handle_special_char(s, i, &b);
+		if (res == 2)
 			break ;
-		count++;
-		while (*cmd && (quote != '\0' || !is_space(*cmd)))
-		{
-			if ((*cmd == '\'' || *cmd == '"') && (!quote || *cmd == quote))
-			{
-				if (quote)
-					quote = '\0';
-				else
-					quote = *cmd;
-			}
-			cmd++;
-		}
+		if (res == 1)
+			continue ;
+		if (res == -1)
+			break ;
+		c = s[*i];
+		if (!builder_append(&b, c))
+			break ;
+		(*i)++;
 	}
-	return (count);
-}
-
-static char	*extract_arg(const char **cmd_ptr)
-{
-	const char	*cmd;
-	char		quote_char;
-	int			in_quotes;
-	size_t		len;
-	const char	*start;
-	char		*arg;
-
-	cmd = *cmd_ptr;
-	quote_char = '\0';
-	in_quotes = 0;
-	len = 0;
-	while (is_space(*cmd))
-		cmd++;
-	start = cmd;
-	while (*cmd && (in_quotes || !is_space(*cmd)))
-	{
-		if ((*cmd == '\'' || *cmd == '"') && (in_quotes == 0 || *cmd == quote_char))
-		{
-			if (in_quotes)
-				in_quotes = 0;
-			else
-			{
-				in_quotes = 1;
-				quote_char = *cmd;
-			}
-		}
-		else
-			len++;
-		cmd++;
-	}
-	arg = malloc(len + 1);
-	if (!arg)
-		return (NULL);
-	len = 0;
-	while (start < cmd)
-	{
-		if (*start == '\'' || *start == '"')
-		{
-			if (in_quotes && *start == quote_char)
-				in_quotes = 0;
-			else if (!in_quotes)
-			{
-				in_quotes = 1;
-				quote_char = *start;
-			}
-		}
-		else
-			arg[len++] = *start;
-		start++;
-	}
-	arg[len] = '\0';
-	*cmd_ptr = cmd;
-	return (arg);
+	return (builder_finalize(&b));
 }
 
 // Function to split a command string into arguments, handling quotes
 // < in.txt cat | grep -o -E 'is | the' > out.txt
 // ./pipex in.txt "cat" "grep -o -E 'is | the'" out.txt
-char	**split_command(const char *cmd)
+static char	**split_command(char *cmd)
 {
-	int		arg_count;
-	char	**args;
+	t_list	*tokens;
+	char	*token;
 	int		i;
+	t_list	*new;
 
-	if (!cmd)
-		return (NULL);
-	arg_count = count_args(cmd);
-	args = (char **)malloc((arg_count + 1) * sizeof(char *));
-	if (!args)
-		return (NULL);
+	tokens = NULL;
 	i = 0;
-	while (i < arg_count)
+	while (cmd && cmd[i])
 	{
-		args[i] = extract_arg(&cmd);
-		if (!args[i])
+		while (is_space(cmd[i]))
+			i++;
+		if (!cmd[i])
+			break ;
+		token = parse_one_token(cmd, &i);
+		if (!token)
+			break ;
+		new = ft_lstnew(token);
+		if (!new)
 		{
-			while (i-- > 0)
-				free(args[i]);
-			free(args);
-			return (NULL);
+			free(token);
+			break ;
 		}
+		ft_lstadd_back(&tokens, new);
+	}
+	return (list_to_array(tokens));
+}
+
+static char	**handle_absolute_path(t_pipex *pa, char **cmd_argv)
+{
+	if (access(cmd_argv[0], X_OK) != 0)
+	{
+		ft_fprintf(STDERR_FILENO, "%s: %s\n", cmd_argv[0], strerror(errno));
+		pa->err = PERMISSION_DENIED;
+		return (cmd_argv);
+	}
+	return (cmd_argv);
+}
+
+static char	**search_in_env_paths(t_pipex *pa, char **cmd_argv)
+{
+	int		i;
+	char	*path;
+
+	i = 0;
+	while (pa->env_paths && pa->env_paths[i])
+	{
+		path = ft_form_path(pa->env_paths[i], cmd_argv[0]);
+		if (path && access(path, X_OK) == 0)
+		{
+			free(cmd_argv[0]);
+			cmd_argv[0] = path;
+			return (cmd_argv);
+		}
+		free(path);
 		i++;
 	}
-	args[arg_count] = NULL;
-	return (args);
+	ft_fprintf(STDERR_FILENO, "%s: command not found\n", cmd_argv[0]);
+	pa->err = COMMAND_NOT_FOUND;
+	return (cmd_argv);
 }
 
 /**
@@ -147,28 +123,17 @@ char	**split_command(const char *cmd)
  */
 char	**ft_parse_cmd(t_pipex *pa, char *cmd)
 {
-	int		i;
-	char	*path;
 	char	**cmd_argv;
 
 	cmd_argv = split_command(cmd);
-	if (!cmd_argv || !cmd_argv[0] || cmd_argv[0][0] == '/' ||
-			!ft_strncmp(cmd_argv[0], "./", 2) ||
-			!ft_strncmp(cmd_argv[0], "../", 3) ||
-			!pa->env_paths)
-		return (cmd_argv);
-	i = 0;
-	while (pa->env_paths[i])
+	if (!cmd_argv || !cmd_argv[0])
 	{
-		path = ft_form_path(pa->env_paths[i], cmd_argv[0]);
-		if (path && access(path, X_OK) == 0)
-		{
-			free(cmd_argv[0]);
-			cmd_argv[0] = path;
-			return (cmd_argv);
-		}
-		free(path);
-		i++;
+		ft_fprintf(STDERR_FILENO, "'': command not found\n");
+		pa->err = COMMAND_NOT_FOUND;
+		return (cmd_argv);
 	}
-	return (cmd_argv);
+	if (cmd_argv[0][0] == '/' || !ft_strncmp(cmd_argv[0], "./", 2) ||
+			!ft_strncmp(cmd_argv[0], "../", 3))
+		return (handle_absolute_path(pa, cmd_argv));
+	return (search_in_env_paths(pa, cmd_argv));
 }

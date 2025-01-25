@@ -6,7 +6,7 @@
 /*   By: vbronov <vbronov@student.42lausanne.ch>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/05 02:11:08 by vbronov           #+#    #+#             */
-/*   Updated: 2025/01/05 02:11:11 by vbronov          ###   ########.fr       */
+/*   Updated: 2025/01/25 13:54:48 by vbronov          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ int	ft_init_pipex(t_pipex *pa, int argc, char *argv[], char *envp[])
 	pa->argc = argc;
 	pa->argv = argv;
 	pa->envp = envp;
+	pa->err = 0;
 	pa->here_doc = FALSE;
 	if (ft_strncmp(pa->argv[1], "here_doc", 9) == 0)
 		pa->here_doc = TRUE;
@@ -79,15 +80,13 @@ void	ft_child(t_pipex *pa, int i)
 	else
 		ft_middle_cmd(pa, i);
 	cmd_argv = ft_parse_cmd(pa, pa->argv[i + 2]);
-	if (!cmd_argv)
+	if (pa->err)
 	{
+		ft_free_strs(cmd_argv);
 		ft_clean_pipex(pa);
-		exit(EXIT_FAILURE);
+		exit(pa->err);
 	}
-	if (cmd_argv[0] != NULL)
-		execve(cmd_argv[0], cmd_argv, pa->envp);
-	else
-		execve("", (char *const []){"", NULL}, pa->envp);
+	execve(cmd_argv[0], cmd_argv, pa->envp);
 	perror(pa->argv[i + 2]);
 	ft_free_strs(cmd_argv);
 	ft_clean_pipex(pa);
@@ -110,7 +109,7 @@ void	process_fd_and_pipes(t_pipex *pa)
 	ft_free_pipes(pa);
 }
 
-void	pipex(t_pipex *pa)
+int	pipex(t_pipex *pa)
 {
 	int		i;
 	int		pid;
@@ -135,6 +134,5 @@ void	pipex(t_pipex *pa)
 		i++;
 	}
 	ft_clean_pipex(pa);
-	while (waitpid(-1, NULL, 0) != -1)
-		;
+	return (ft_wait_pid(pid));
 }

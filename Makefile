@@ -5,10 +5,16 @@ LIBFT_DIR := libft
 INCLUDE_DIR := includes
 SRC_DIR := srcs
 BONUS_DIR := bonus
-FILES := main.c pipex.c pipe.c utils.c args_parser.c
+FILES := main.c \
+		pipex.c \
+		pipe.c \
+		utils.c \
+		args_parser.c \
+		str_builder.c \
+		quotes.c \
+		helpers.c
 SRCS := $(addprefix $(SRC_DIR)/, $(FILES))
-BONUS_FILES := main_bonus.c \
-			bonus_utils.c
+BONUS_FILES := main_bonus.c
 CFLAGS := -Wall -Wextra -Werror -g
 IFLAGS := -I$(LIBFT_DIR) -I$(INCLUDE_DIR)
 LFLAGS := -L$(LIBFT_DIR) -lft
